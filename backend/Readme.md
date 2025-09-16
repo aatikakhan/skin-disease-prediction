@@ -16,3 +16,6 @@ this step is required for installing dependencies on virtual envirenment
 
 ### install all dependency
 ```$ pip install -r requirements.txt```
+
+### Activate Vitual Environment
+```$ source venv/bin/activate```
