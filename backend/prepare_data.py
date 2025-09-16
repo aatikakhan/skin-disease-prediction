@@ -1,3 +1,4 @@
+# Training only for 3 diseases: Melanoma, Benign, Carcinoma
 import pandas as pd
 import os
 import shutil
@@ -62,3 +63,5 @@ copy_images(val_df, 'val')
 print("✅ Dataset prepared successfully:")
 print(f"- Training data: {os.path.join(output_dir, 'train')}")
 print(f"- Validation data: {os.path.join(output_dir, 'val')}")
+
+
