@@ -3,6 +3,7 @@ from torch import nn, optim
 from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader
 import os
+from tqdm import tqdm  # <-- Import tqdm
 
 def main():
     # Paths
@@ -55,7 +56,11 @@ def main():
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-        for images, labels in train_loader:
+
+        # tqdm progress bar for training batches
+        train_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} [Training]", leave=False)
+
+        for images, labels in train_bar:
             images, labels = images.to(device), labels.to(device)
 
             optimizer.zero_grad()
@@ -66,18 +71,29 @@ def main():
 
             running_loss += loss.item() * images.size(0)
 
+            # Update progress bar postfix with current loss
+            train_bar.set_postfix(loss=loss.item())
+
         epoch_loss = running_loss / len(train_dataset)
 
         model.eval()
         correct = 0
         total = 0
+
+        # tqdm progress bar for validation batches
+        val_bar = tqdm(val_loader, desc=f"Epoch {epoch+1}/{num_epochs} [Validation]", leave=False)
+
         with torch.no_grad():
-            for images, labels in val_loader:
+            for images, labels in val_bar:
                 images, labels = images.to(device), labels.to(device)
                 outputs = model(images)
                 _, preds = torch.max(outputs, 1)
                 correct += (preds == labels).sum().item()
                 total += labels.size(0)
+
+                # Optionally, you can update validation accuracy in the progress bar (approximate)
+                val_acc = correct / total
+                val_bar.set_postfix(val_acc=f"{val_acc:.4f}")
 
         val_acc = correct / total
         print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}, Val Acc: {val_acc:.4f}")
