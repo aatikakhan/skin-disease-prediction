@@ -12,7 +12,7 @@ app = FastAPI()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Classes - make sure this matches your training classes
-class_names = ['Melanoma', 'Benign', 'Carcinoma']
+class_names = [ 'Benign', 'Carcinoma', 'Melanoma']
 
 # Load model architecture and weights
 def load_model():
