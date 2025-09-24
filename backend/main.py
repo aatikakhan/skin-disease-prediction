@@ -1,43 +1,60 @@
-from flask import Flask, request
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import img_to_array
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
 from PIL import Image
-import numpy as np
-import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+import io
+import torch
+from torchvision import models, transforms
+import torch.nn as nn
 
+app = FastAPI()
 
-app = Flask(__name__)
-model = load_model("skin_disease_model.h5")
+# Device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Classes - make sure this matches your training classes
+class_names = ['Melanoma', 'Benign', 'Carcinoma']
 
-#Defining the classes
+# Load model architecture and weights
+def load_model():
+    model = models.resnet18(pretrained=False)
+    model.fc = nn.Linear(model.fc.in_features, len(class_names))
+    model.load_state_dict(torch.load('skin_disease_classifier.pth', map_location=device))
+    model.eval()
+    model.to(device)
+    return model
 
-class_names  =["Cellulitis", "Impetigo", "Athelete-Foot", "Nail-Fungus", "Ringworm","Cutaneous-larva-migrans","Chickenpox", "Shingles"]
+model = load_model()
 
+# Image transforms — must match training
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406],
+                         [0.229, 0.224, 0.225])
+])
 
-#Preparing the image before feeding it to the model
-def preprocess_image(img, target_size):
-    img = img.resize(target_size)
-    im = img_to_array(img)
-    img = np.expand_dims(img, axis =0)
-    img = img / 255.0
-    return img
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    try:
+        # Read uploaded image bytes and convert to PIL Image
+        image_bytes = await file.read()
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
+        # Apply transforms and add batch dimension
+        input_tensor = transform(image).unsqueeze(0).to(device)
 
-#Defining the route POST /predict
-@app.route("/predict", methods =["POST"])
-def predict():
-    file = request.files["file"]
-    if file:
-        image = Image.open(file.stream)
-        image = preprocess_image(image, target_size=(150,150))
-        prediction = model.predict(image)
-        predicted_class = class_names[np.argmax(prediction)]
-        return {"prediction": predicted_class}
-    return {"error": "No file uploaded"}
-    
+        # Forward pass
+        with torch.no_grad():
+            outputs = model(input_tensor)
+            probs = torch.nn.functional.softmax(outputs, dim=1)
+            conf, pred_idx = torch.max(probs, 1)
+            predicted_class = class_names[pred_idx.item()]
+            confidence = conf.item()
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        return JSONResponse({
+            "class": predicted_class,
+            "confidence": confidence
+        })
+
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
