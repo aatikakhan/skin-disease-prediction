@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 import os
 
 # Paths
-data_dir = '/Users/ak/TFox/college/skin-disease-prediction/backend/data'
+data_dir = '/Users/ak/TFox/college/skin-disease-prediction/training/data'
 train_dir = os.path.join(data_dir, 'train')
 val_dir = os.path.join(data_dir, 'val')
 
@@ -67,7 +67,7 @@ for epoch in range(num_epochs):
 
         running_loss += loss.item() * images.size(0)
 
-    epoch_loss = running_loss / len(train_loader.dataset)
+    epoch_loss = running_loss / (len(train_loader) * batch_size)
 
     # Validation
     model.eval()
