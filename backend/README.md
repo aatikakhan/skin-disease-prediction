@@ -15,3 +15,6 @@ Running server
 python3 -m venv .venv
 
 source .venv/bin/activate
+
+run the app
+uvicorn main:app --reload
