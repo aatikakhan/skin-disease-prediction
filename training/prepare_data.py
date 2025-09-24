@@ -5,9 +5,9 @@ import shutil
 from sklearn.model_selection import train_test_split
 
 # Paths (update if needed)
-metadata_path = '/Users/ak/TFox/college/skin-disease-prediction/backend/archive/HAM10000_metadata.csv'
-image_dir = '/Users/ak/TFox/college/skin-disease-prediction/backend/archive'
-output_dir = '/Users/ak/TFox/college/skin-disease-prediction/backend/data'
+metadata_path = '/Users/ak/TFox/college/skin-disease-prediction/training/archive/HAM10000_metadata.csv'
+image_dir = '/Users/ak/TFox/college/skin-disease-prediction/training/archive'
+output_dir = '/Users/ak/TFox/college/skin-disease-prediction/training/data'
 
 # Read CSV — pandas will detect header automatically
 df = pd.read_csv(metadata_path)
