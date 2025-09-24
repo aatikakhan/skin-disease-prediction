@@ -11,3 +11,7 @@ Install dependencies
 Running server
 
     python main.py
+
+python3 -m venv .venv
+
+source .venv/bin/activate

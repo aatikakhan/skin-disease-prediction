@@ -6,3 +6,4 @@ backend/data
 training/venv
 training/data
 training/archive
+backend/.venv
